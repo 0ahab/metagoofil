@@ -135,46 +135,39 @@ def doprocess(argv):
         dirList = os.listdir(dir)
         print dirList
         emails = []
-        for filename in dirList:
-            if filename != "":
-                filetype = str(filename.split(".")[-1])
-                if filetype == "pdf":
-                    test = metadataPDF.metapdf(dir + "/" + filename, password)
-                elif filetype == "doc" or filetype == "ppt" or filetype == "xls":
-                    print "doc"
-                    test = metadataMSOffice.metaMs2k(dir + "/" + filename)
-                    if os.name == "posix":
-                        testex = metadataExtractor.metaExtractor(dir + "/" + filename)
-                elif filetype == "docx" or filetype == "pptx" or filetype == "xlsx":
-                    test = metadataMSOfficeXML.metaInfoMS(dir + "/" + filename)
-                res = test.getData()
-                if res == "ok":
-                    raw = test.getRaw()
-                    users = test.getUsers()
-                    paths = test.getPaths()
-                    soft = test.getSoftware()
-                    if (filetype == "doc" or filetype == "xls" or filetype == "ppt") and os.name=="posix":
-                        testex.runExtract()
-                        testex.getData()
-                        paths.extend(testex.getPaths())
-                        respack = [filename, users, paths, soft, raw, email]
-                        all.append(respack)
+        if filename != "":
+            if filetype == "pdf":
+                test = metadataPDF.metapdf(dir + "/" + filename, password)
+            elif filetype == "doc" or filetype == "ppt" or filetype == "xls":
+                test = metadataMSOffice.metaMs2k(dir + "/" + filename)
+                if os.name == "posix":
+                    testex = metadataExtractor.metaExtractor(dir + "/" + filename)
+            elif filetype == "docx" or filetype == "pptx" or filetype == "xlsx":
+                test = metadataMSOfficeXML.metaInfoMS(dir + "/" + filename)
+            res = test.getData()
+            if res == "ok":
+                raw = test.getRaw()
+                users = test.getUsers()
+                paths = test.getPaths()
+                soft = test.getSoftware()
+                email = []
+                if filetype == "pdf" or filetype == "docx":
+                    res = test.getTexts()
+                    if res == "ok":
+                        email = test.getEmails()
+                        for em in email:
+                            emails.append(em)
                     else:
-                        failedfiles.append(filename + ":" + str(res))
-                        print "[x] Error in the parsing process"  # A error in the parsing process
-
-                    if filetype == "docx" or filetype == "pdf":
-                        res = test.getTexts()
-                        if res == "ok":
-                            email = test.getEmails()
-                            for x in email:
-                                emails.append(x)
-                        else:
-                            failedfiles(filename + ":" + str(res))
-                    else:
-                        print "pass"
+                        email = []
+                        failedfiles.append(x + ":" + str(res))
+                respack=[x, users, paths, soft, raw, email]
+                all.append(respack)
             else:
-                pass
+                failedfiles.append(x + ":" + str(res))
+                print "\t [x] Error in the parsing process" #A error in the parsing process
+        else:
+            pass
+
     print "processing"
     proc = processor.processor(all)
     userlist = proc.sort_users()
@@ -208,7 +201,7 @@ def doprocess(argv):
     #   print x
 
 if __name__ == "__main__":
-    try: 
+    try:
     	doprocess(sys.argv[1:])
     except KeyboardInterrupt:
         print "Process interrupted by user."

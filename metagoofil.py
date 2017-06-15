@@ -135,38 +135,43 @@ def doprocess(argv):
         dirList = os.listdir(dir)
         print dirList
         emails = []
-        if filename != "":
-            if filetype == "pdf":
-                test = metadataPDF.metapdf(dir + "/" + filename, password)
-            elif filetype == "doc" or filetype == "ppt" or filetype == "xls":
-                test = metadataMSOffice.metaMs2k(dir + "/" + filename)
-                if os.name == "posix":
-                    testex = metadataExtractor.metaExtractor(dir + "/" + filename)
-            elif filetype == "docx" or filetype == "pptx" or filetype == "xlsx":
-                test = metadataMSOfficeXML.metaInfoMS(dir + "/" + filename)
-            res = test.getData()
-            if res == "ok":
-                raw = test.getRaw()
-                users = test.getUsers()
-                paths = test.getPaths()
-                soft = test.getSoftware()
-                email = []
-                if filetype == "pdf" or filetype == "docx":
-                    res = test.getTexts()
-                    if res == "ok":
-                        email = test.getEmails()
-                        for em in email:
-                            emails.append(em)
-                    else:
-                        email = []
-                        failedfiles.append(x + ":" + str(res))
-                respack=[x, users, paths, soft, raw, email]
-                all.append(respack)
+        for filename in dirList:
+            if filename != "":
+                filetype = str(filename.split(".")[-1])
+                if filetype == "pdf":
+                    test = metadataPDF.metapdf(dir + "/" + filename, password)
+                elif filetype == "doc" or filetype == "ppt" or filetype == "xls":
+                    test = metadataMSOffice.metaMs2k(dir + "/" + filename)
+                    if os.name == "posix":
+                        testex = metadataExtractor.metaExtractor(dir + "/" + filename)
+                elif filetype == "docx" or filetype == "pptx" or filetype == "xlsx":
+                    test = metadataMSOfficeXML.metaInfoMS(dir + "/" + filename)
+                res = test.getData()
+                if res == "ok":
+                    raw = test.getRaw()
+                    users = test.getUsers()
+                    paths = test.getPaths()
+                    soft = test.getSoftware()
+                    email = []
+                    if filetype == "pdf" or filetype == "docx":
+                        res = test.getTexts()
+                        if res == "ok":
+                            email = test.getEmails()
+                            for em in email:
+                                emails.append(em)
+                        else:
+                            email = []
+                            failedfiles.append(x + ":" + str(res))
+                    try:
+                        respack=[filename, users, paths, soft, raw, email]
+                        all.append(respack)
+                    except Exception, e:
+                        print e
+                else:
+                    failedfiles.append(x + ":" + str(res))
+                    print "\t [x] Error in the parsing process" #A error in the parsing process
             else:
-                failedfiles.append(x + ":" + str(res))
-                print "\t [x] Error in the parsing process" #A error in the parsing process
-        else:
-            pass
+                pass
 
     print "processing"
     proc = processor.processor(all)

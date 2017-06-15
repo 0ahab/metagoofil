@@ -134,6 +134,7 @@ def doprocess(argv):
         print "[-] Starting local analysis in directory " + dir
         dirList = os.listdir(dir)
         print dirList
+        emails = []
         for filename in dirList:
             if filename != "":
                 filetype = str(filename.split(".")[-1])
